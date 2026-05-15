@@ -5,7 +5,7 @@ import java.awt.*;
 import javax.swing.event.*;
 import java.awt.event.*;
 
-public class GUI extends JFrame {
+public class Login extends JFrame {
 	/* Panel */
 	JPanel basePanel = new JPanel(new BorderLayout());
 	JPanel centerPanel = new JPanel(new BorderLayout());
@@ -14,6 +14,7 @@ public class GUI extends JFrame {
 	JPanel southPanel = new JPanel();
 	
 	/* Label */
+	
 	JLabel idL = new JLabel("아이디");
 	JLabel pwL = new JLabel("비밀번호");
 	
@@ -27,7 +28,7 @@ public class GUI extends JFrame {
 	
 	Operator o = null;
 	
-	GUI(Operator _o){
+	Login(Operator _o){
 		o = _o;
 		
 		setTitle("로그인");
@@ -102,7 +103,7 @@ public class GUI extends JFrame {
 			
 			/* 회원가입 버튼 이벤트 */
 			if(b.getText().equals("회원가입")) {
-				
+				o.jf.setVisible(true);
 			}
 			
 			/* 로그인 버튼 이벤트 */
@@ -114,8 +115,12 @@ public class GUI extends JFrame {
 				
 				else if(uid != null && upass != null) {
 					if(o.db.logincheck(uid, upass)) {	//이 부분이 데이터베이스에 접속해 로그인 정보를 확인하는 부분이다.
-						System.out.println("로그인 성공");
-						JOptionPane.showMessageDialog(null, "로그인에 성공하였습니다");
+						o.loginId = uid;
+					    o.loginNick = o.db.getNick(uid);
+					    System.out.println("로그인 성공");
+				        o.rm = new Room(o.db, o);
+						dispose();
+						o.rm.setVisible(true);
 					} else {
 						System.out.println("로그인 실패 > 로그인 정보 불일치");
 						JOptionPane.showMessageDialog(null, "로그인에 실패하였습니다");

@@ -1,0 +1,108 @@
+package JAVA_project;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class Join extends JFrame {
+	/* Panel */
+	JPanel panel = new JPanel();
+	
+	/* Label */
+	JLabel nkL = new JLabel("이름");
+	JLabel idL = new JLabel("아이디");
+	JLabel pwL = new JLabel("비밀번호");
+	
+	/* TextField */
+	JTextField nk = new JTextField();
+	JTextField id = new JTextField();
+	JPasswordField pw = new JPasswordField();
+	
+	/* Button */
+	JButton joinBtn = new JButton("가입하기");
+	
+	Operator o = null;
+	
+	Join(Operator _o) {
+		o = _o;
+
+		setTitle("로그인");
+		
+		/* Label 크기 작업 */
+		nkL.setPreferredSize(new Dimension(50, 30));
+		idL.setPreferredSize(new Dimension(50, 30));
+		pwL.setPreferredSize(new Dimension(50, 30));
+		
+		/* TextField 크기 작업 */
+		nk.setPreferredSize(new Dimension(140, 30));
+		id.setPreferredSize(new Dimension(140, 30));
+		pw.setPreferredSize(new Dimension(140, 30));
+		
+		/* Button 크기 작업 */
+		joinBtn.setPreferredSize(new Dimension(115, 25));
+		
+		/* Panel 추가 작업 */
+		setContentPane(panel);
+
+		panel.add(nkL);
+		panel.add(nk);
+		
+		panel.add(idL);
+		panel.add(id);
+		
+		panel.add(pwL);
+		panel.add(pw);
+		panel.add(joinBtn);
+		
+		/* Button 이벤트 리스너 추가 */
+		ButtonListener bl = new ButtonListener();
+		
+		joinBtn.addActionListener(bl);
+		
+		setSize(250, 180);
+		setLocationRelativeTo(null);
+		setResizable(false);
+	}
+	
+	/* Button 이벤트 리스너 */
+	class ButtonListener implements ActionListener{
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JButton b = (JButton)e.getSource();
+			
+			/* TextField에 입력된 회원 정보들을 변수에 초기화 */
+			String unk = nk.getText();
+			String uid = id.getText();
+			String upass = "";
+			for(int i=0; i<pw.getPassword().length; i++) {
+				upass = upass + pw.getPassword()[i];
+			}
+			
+			/* 가입하기 버튼 이벤트 */
+			if(b.getText().equals("가입하기")) {
+				if(unk.equals("") && uid.equals("") || upass.equals("")) {
+					JOptionPane.showMessageDialog(null, "모든 정보를 기입해주세요", "회원가입 실패", JOptionPane.ERROR_MESSAGE);
+					System.out.println("회원가입 실패 > 회원정보 미입력");
+				}
+				
+				else if(!unk.equals("") && !uid.equals("") && !upass.equals("")) {
+					if(o.db.joinCheck(uid, upass, unk)) {
+						System.out.println("회원가입 성공");
+						JOptionPane.showMessageDialog(null, "회원가입에 성공하였습니다");
+						nk.setText("");
+						id.setText("");
+						pw.setText("");
+						dispose();
+					} else {
+						System.out.println("회원가입 실패");
+						JOptionPane.showMessageDialog(null, "이미 있는 아이디 입니다.");
+						nk.setText("");
+						id.setText("");
+						pw.setText("");
+					}
+				}
+			}
+		}
+	}
+
+}
