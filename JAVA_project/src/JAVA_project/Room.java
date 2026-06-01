@@ -13,15 +13,15 @@ public class Room extends JFrame {
 
     DB db;
     Operator o;
-    JList<String> roomListUI;
+    JList<RoomInfo> roomListUI;
 
     public Room(DB db, Operator o) {
         this.db = db;
         this.o = o;
 
         /* 방 목록 불러오기 */
-        ArrayList<String> rooms = db.RoomList(o.loginId);
-        roomListUI = new JList<>(rooms.toArray(new String[0]));
+        ArrayList<RoomInfo> rooms = db.RoomList(o.loginId);
+        roomListUI = new JList<>(rooms.toArray(new RoomInfo[0]));
 
         /* 리스트 더블클릭 이벤트 */
         roomListUI.addMouseListener(new MouseAdapter() {
@@ -73,38 +73,16 @@ public class Room extends JFrame {
 
     /* 방 목록 새로고침 */
     private void refreshRoomList() {
-        ArrayList<String> rooms = db.RoomList(o.loginId);
-        roomListUI.setListData(rooms.toArray(new String[0]));
+        ArrayList<RoomInfo> rooms = db.RoomList(o.loginId);
+        roomListUI.setListData(rooms.toArray(new RoomInfo[0]));
     }
 
     /* 선택된 방 열기 */
     private void openSelectedRoom() {
-        String selected = roomListUI.getSelectedValue();
+        RoomInfo room = roomListUI.getSelectedValue();
 
-        if (selected == null) {
-            JOptionPane.showMessageDialog(
-                Room.this,
-                "방을 선택하세요."
-            );
-            return;
-        }
-
-        try {
-            // 형식: "1 - 프로젝트 회의방"
-            String[] parts = selected.split(" - ", 2);
-
-            int roomnum = Integer.parseInt(parts[0]);
-            String roomName = parts[1];
-
-            new chatRoom(roomnum, roomName, o);
-
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                Room.this,
-                "방 정보를 읽을 수 없습니다.\n형식: 방번호 - 방이름"
-            );
-            System.out.println("방 열기 실패 > " + ex.toString());
-        }
+        if (room == null) return;
+        new chatRoom(room.roomnum, room.roomName, o);
     }
 
     /* 버튼 이벤트 */

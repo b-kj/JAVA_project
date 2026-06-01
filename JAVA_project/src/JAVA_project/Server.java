@@ -7,18 +7,11 @@ import java.util.*;
 public class Server {
     private static final int PORT = 12345;
 
-    /* clients : 현재 이 방에 접속 중인 사용자들의 출력 스트림
-     */
     private static class Room {
         Set<PrintWriter> clients = new HashSet<>();
+        Set<String> users = new HashSet<>();
     }
 
-    /*
-     * 방 이름 -> Room 객체
-     * 예:
-     *   "test" -> Room
-     *   "project" -> Room
-     */
     private static Map<String, Room> rooms = new HashMap<>();
 
     public static void main(String[] args) {
@@ -36,9 +29,7 @@ public class Server {
         }
     }
 
-    /*
-     * 클라이언트 1명당 1개의 스레드
-     */
+    // 1인 1 스레드
     private static class Handler extends Thread {
         private Socket socket;
         private BufferedReader in;
@@ -60,10 +51,7 @@ public class Server {
                 out = new PrintWriter(
                         socket.getOutputStream(), true);
 
-                /*
-                 * 1. 클라이언트에게 방 이름 요청
-                 * chatRoom.java가 자동으로 roomName을 전송한다.
-                 */
+                // 클라이언트에게 방 이름 요청 chatRoom.java가 자동으로 roomName을 전송한다.
                 out.println("SUBMIT_ROOM");
                 roomName = in.readLine();
 
@@ -71,10 +59,7 @@ public class Server {
                     return;
                 }
 
-                /*
-                 * 2. 클라이언트에게 닉네임 요청
-                 * chatRoom.java가 자동으로 o.loginNick을 전송한다.
-                 */
+                // 2. 클라이언트에게 닉네임 요청 chatRoom.java가 자동으로 o.loginNick을 전송한다.
                 out.println("SUBMIT_NAME");
                 name = in.readLine();
 
@@ -82,9 +67,7 @@ public class Server {
                     return;
                 }
 
-                /*
-                 * 3. 방 생성 또는 기존 방 가져오기
-                 */
+                //방 생성 또는 기존 방 가져오기
                 Room room;
 
                 synchronized (rooms) {
@@ -93,16 +76,15 @@ public class Server {
 
                     // 현재 사용자 추가
                     room.clients.add(out);
+                    room.users.add(name);
+                    
+                    sendUserList(room);
                 }
 
-                /*
-                 * 4. 입장 메시지 전송
-                 */
+                //입장 메시지 전송
                 broadcast(roomName, "[시스템] " + name + "님이 입장하셨습니다. ", null);
 
-                /*
-                 * 5. 메시지 수신 및 전달
-                 */
+                // 메시지 수신 및 전달
                 String message;
 
                 while ((message = in.readLine()) != null) {
@@ -117,9 +99,7 @@ public class Server {
             }
         }
 
-        /*
-         * 연결 종료 처리
-         */
+        // 연결 종료
         private void disconnect() {
             if (roomName != null && out != null) {
                 int remainingUsers = 0;
@@ -130,6 +110,9 @@ public class Server {
                     if (room != null) {
                         // 현재 사용자 제거
                         room.clients.remove(out);
+                        room.users.remove(name);
+                        
+                        sendUserList(room);
 
                         remainingUsers = room.clients.size();
 
@@ -156,13 +139,7 @@ public class Server {
             }
         }
 
-        /*
-         * 특정 방의 모든 사용자에게 메시지 전송
-         *
-         * excludeWriter:
-         *   null이면 모두에게 전송
-         *   특정 PrintWriter면 해당 사용자 제외
-         */
+        // 특정 방의 모든 사용자에게 메시지 전송
         private void broadcast( String roomName, String message, PrintWriter excludeWriter) {
 
             if (roomName == null) {
@@ -180,6 +157,21 @@ public class Server {
                     }
                 }
             }
+        }
+    }
+    
+    private static void sendUserList(Room room) {
+        StringBuilder sb = new StringBuilder("USERLIST:");
+
+        for(String user : room.users) {
+            sb.append(user).append(",");
+        }
+
+        String msg = sb.toString();
+        System.out.println(msg);
+
+        for(PrintWriter pw : room.clients) {
+            pw.println(msg);
         }
     }
 }
