@@ -67,11 +67,27 @@ public class chatRoom extends JFrame {
         bottomPanel.add(inputField, BorderLayout.CENTER);
         bottomPanel.add(sendBtn,BorderLayout.EAST);
 
-        /* 메인 레이아웃 */
-        setLayout(new BorderLayout());
-        add(chatScroll, BorderLayout.CENTER);
-        add(memberScroll, BorderLayout.NORTH);
-        add(bottomPanel, BorderLayout.SOUTH);
+       /* 추가: 상단 버튼 패널 (일정 / 투두) */
+        JPanel topBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton scheduleBtn = new JButton("일정 관리");
+        JButton todoBtn = new JButton("투두 리스트");
+        topBtnPanel.add(scheduleBtn);
+        topBtnPanel.add(todoBtn);
+
+        /* 추가: 버튼 패널과 멤버 목록을 하나로 묶음 */
+        JPanel topCombinedPanel = new JPanel(new BorderLayout());
+        topCombinedPanel.add(topBtnPanel, BorderLayout.NORTH);
+        topCombinedPanel.add(memberScroll, BorderLayout.CENTER);
+
+        /* 메인 레이아웃 적용 */
+        setLayout(new BorderLayout());
+        add(chatScroll, BorderLayout.CENTER);
+        add(topCombinedPanel, BorderLayout.NORTH); 
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        /* 일정/투두 프레임 띄우는 이벤트 연결  */
+        scheduleBtn.addActionListener(e -> new ScheduleFrame(roomnum, o.db));
+        todoBtn.addActionListener(e -> new TodoFrame(roomnum, o.db));
 
         /* 창 설정 */
         setTitle("[ " + roomnum + " ] " + roomName);
