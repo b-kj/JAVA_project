@@ -6,10 +6,17 @@ import java.util.*;
 
 public class Server {
     private static final int PORT = 12345;
+    
+    private static class UserState { //유저 상태
+        boolean working;
+        long workedSeconds;
+        long startTime;
+    }
 
-    private static class Room {
+    private static class Room { //방안의 정보
         Set<PrintWriter> clients = new HashSet<>();
         Set<String> users = new HashSet<>();
+        Map<String, UserState> states = new HashMap<>();
     }
 
     private static Map<String, Room> rooms = new HashMap<>();
@@ -28,6 +35,7 @@ public class Server {
             e.printStackTrace();
         }
     }
+    
 
     // 1인 1 스레드
     private static class Handler extends Thread {
@@ -79,6 +87,7 @@ public class Server {
                     room.users.add(name);
                     
                     sendUserList(room);
+                    sendStatus(room);
                 }
 
                 //입장 메시지 전송
@@ -88,7 +97,37 @@ public class Server {
                 String message;
 
                 while ((message = in.readLine()) != null) {
-                    broadcast(roomName,"[" + name + "] " + message, out);
+                	Room r = rooms.get(roomName);
+                	
+                	if(message.equals("WORK_START")) {
+                	    UserState state = new UserState();
+                	    state.working = true;
+                	    state.startTime = System.currentTimeMillis();
+                	    r.states.put(name, state);
+                	    sendStatus(r);
+                	    continue;
+                	}
+                	if(message.equals("WORK_PAUSE")) {
+                	    UserState state = r.states.get(name);
+
+                	    if(state != null && state.working) {
+                	        state.workedSeconds += (System.currentTimeMillis() - state.startTime) /1000;
+                	        state.working = false;
+                	    }
+                	    sendStatus(r);
+                	    continue;
+                	}
+                	if(message.equals("WORK_RESUME")) {
+                	    UserState state = r.states.get(name);
+
+                	    if(state != null) {
+                	        state.working = true;
+                	        state.startTime =System.currentTimeMillis();
+                	    }
+                	    sendStatus(r);
+                	    continue;
+                	}
+                	broadcast(roomName,"[" + name + "] " + message, out);
                 }
 
             } catch (IOException e) {
@@ -113,6 +152,7 @@ public class Server {
                         room.users.remove(name);
                         
                         sendUserList(room);
+                        sendStatus(room);
 
                         remainingUsers = room.clients.size();
 
@@ -173,5 +213,27 @@ public class Server {
         for(PrintWriter pw : room.clients) {
             pw.println(msg);
         }
+    }
+    
+    private static void sendStatus(Room room) {
+        StringBuilder sb = new StringBuilder("STATUS:");
+        long now = System.currentTimeMillis();
+
+        for(String user : room.users) {
+            UserState state = room.states.get(user);
+
+            if(state == null) 
+                sb.append(user).append("|REST|0,");
+            else {
+                long sec = state.workedSeconds;
+                if(state.working) 
+                    sec += (now - state.startTime) /1000;
+                sb.append(user).append("|").append(state.working ? "WORKING" : "REST").append("|").append(sec).append(",");
+            }
+        }
+        String msg = sb.toString();
+        
+        for(PrintWriter pw : room.clients)
+            pw.println(msg);
     }
 }

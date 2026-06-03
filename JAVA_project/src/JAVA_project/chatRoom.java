@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,6 +16,7 @@ public class chatRoom extends JFrame {
     JTextArea chatArea = new JTextArea();
     JTextField inputField = new JTextField();
     JButton sendBtn = new JButton("전송");
+    JButton workBtn = new JButton("작업 시작");
 
     /* 멤버 목록 */
     DefaultListModel<String> memberModel = new DefaultListModel<>();
@@ -32,6 +34,16 @@ public class chatRoom extends JFrame {
 
     /* 현재 온라인 사용자 */
     Set<String> onlineUsers = new HashSet<>();
+    
+    /* 작업 상태 */
+    boolean workStarted = false;
+    boolean working = false;
+    long lastInputTime = System.currentTimeMillis();
+
+    /* 사용자 상태 */
+    HashMap<String, String> userStatus = new HashMap<>();
+    HashMap<String, Long> userTime = new HashMap<>();
+    HashMap<String, Long> lastUpdateTime = new HashMap<>();
 
     /*생성자 */
     public chatRoom(int roomnum, String roomName, Operator o) {
@@ -51,6 +63,7 @@ public class chatRoom extends JFrame {
 
         /* 입력 패널 */
         JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(workBtn, BorderLayout.WEST);
         bottomPanel.add(inputField, BorderLayout.CENTER);
         bottomPanel.add(sendBtn,BorderLayout.EAST);
 
@@ -80,7 +93,8 @@ public class chatRoom extends JFrame {
         SendListener sl = new SendListener();
         sendBtn.addActionListener(sl);
         inputField.addActionListener(sl);
-
+        workBtn.addActionListener(new WorkListener());
+        
         /* 창 종료 시 소켓 종료 */
         addWindowListener(new WindowAdapter() {
             @Override
@@ -89,6 +103,9 @@ public class chatRoom extends JFrame {
             }
         });
         setVisible(true);
+        
+        new javax.swing.Timer(1000, e -> checkIdle()).start();
+        new javax.swing.Timer(1000, e -> refreshWorkTime()).start();
     }
 
     /* 이전 채팅 불러오기 */
@@ -116,6 +133,7 @@ public class chatRoom extends JFrame {
 
     /* 메시지 전송 */
     private void sendMessage() {
+    	lastInputTime = System.currentTimeMillis();
         String message = inputField.getText().trim();
 
         if (message.equals("")) {
@@ -138,7 +156,43 @@ public class chatRoom extends JFrame {
         inputField.setText("");
         inputField.requestFocus();
     }
+    
+    private void checkIdle() {
+        if(!working)
+            return;
+        
+        long idle = System.currentTimeMillis() - lastInputTime;
 
+        if(idle >= 10000 && working) { // 타이머 멈춤 확인 용 숫자(10초) 마지막에 300000(5분)으로 변경
+        		    working = false;
+        		    workBtn.setText("작업 재개");
+
+        		    if(out != null)
+        		    	out.println("WORK_PAUSE");
+        		    
+        		    SwingUtilities.invokeLater(() -> {
+        		        JOptionPane.showMessageDialog(chatRoom.this, "입력이 없어 타이머가 중지되었습니다.");
+        		    });
+        }
+    }
+    
+    private void refreshWorkTime() {
+        boolean changed = false;
+        for(String user : userStatus.keySet()) {
+            if("WORKING".equals(userStatus.get(user))) {
+                Long sec = userTime.get(user);
+
+                if(sec != null) {
+                    userTime.put(user, sec + 1);
+                    changed = true;
+                }
+            }
+        }
+        if(changed) {
+            updateMemberList(o.db.getRoomMembers(roomnum));
+        }
+    }
+    
     /* 연결 종료 */
     private void disconnect() {
         try {
@@ -150,17 +204,24 @@ public class chatRoom extends JFrame {
 
 
     private void updateMemberList(ArrayList<String> allMembers) { //멤버 목록 갱신
-
         memberModel.clear();
 
         for (String nick : allMembers) {
-        	
-            if (onlineUsers.contains(nick)) { //온라인 업데이트
-                memberModel.addElement("<html>" + nick + " <font color='green'>● 온라인</font></html>");
-            }
-            else { //오프라인 업데이트
-                memberModel.addElement("<html>" + nick  + " <font color='gray'>● 오프라인</font></html>");
-            }
+        	if (onlineUsers.contains(nick)) {
+        	    String status = userStatus.getOrDefault(nick,"REST");
+        	    long sec = userTime.getOrDefault(nick, 0L);
+        	    String time = String.format("%02d:%02d:%02d", sec / 3600, (sec % 3600) / 60, sec % 60);
+        	    String text;
+
+        	    if(status.equals("WORKING")) 
+        	        text = nick + " ● 작업중 (" + time + ")";
+        	    else 
+        	        text = nick + " ● 쉬는중 (" + time + ")";
+        	    memberModel.addElement(text);
+        	}
+        	else {
+        	    memberModel.addElement(nick + " ○ 오프라인");
+        	}
         }
     }
 
@@ -180,7 +241,30 @@ public class chatRoom extends JFrame {
                     else if (line.equals("SUBMIT_NAME")) { // 닉네임 요구
                         out.println(o.loginNick);
                     }
+                    else if(line.startsWith("STATUS:")) { // 상태 요구
 
+                        userStatus.clear();
+                        userTime.clear();
+
+                        String data = line.substring(7);
+                        String[] users = data.split(",");
+
+                        for(String user : users) {
+                            if(user.trim().equals(""))
+                                continue;
+
+                            String[] info = user.split("\\|");
+
+                            if(info.length >= 3) {
+                                userStatus.put(info[0], info[1]);
+                                long sec = Long.parseLong(info[2]);
+                                userTime.put(info[0], sec);
+                                lastUpdateTime.put(info[0], System.currentTimeMillis());
+                            }
+                        }
+                        updateMemberList(o.db.getRoomMembers(roomnum));
+                        continue;
+                    }
                     else if(line.startsWith("USERLIST:")) { //멤버 요구
 
                         onlineUsers.clear();
@@ -194,9 +278,7 @@ public class chatRoom extends JFrame {
                             }
                         }
 
-                        updateMemberList(
-                            o.db.getRoomMembers(roomnum));
-
+                        updateMemberList(o.db.getRoomMembers(roomnum));
                         continue;
                     }
                     
@@ -230,7 +312,37 @@ public class chatRoom extends JFrame {
             }
         }
     }
-  
+    
+    class WorkListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+            if(!workStarted) {
+            	lastInputTime = System.currentTimeMillis();
+                workStarted = true;
+                working = true;
+                workBtn.setText("일시정지");
+
+                if(out != null)
+                    out.println("WORK_START");
+            }
+            else if(working) {
+                working = false;
+                workBtn.setText("작업 재개");
+
+                if(out != null)
+                    out.println("WORK_PAUSE");
+            }
+            else {
+                lastInputTime = System.currentTimeMillis();
+                working = true;
+                workBtn.setText("일시정지");
+                if(out != null) out.println("WORK_RESUME");
+            }
+        }
+    }
+    
     class SendListener implements ActionListener { //전송
 
         @Override
