@@ -217,5 +217,88 @@ public class DB {
 	    }
 	    return list;
 	}
+// ==========================================
+	// 일정(Schedule) 관련 DB 메소드
+	// ==========================================
+	public void addSchedule(int roomnum, String title, java.time.LocalDate deadline) {
+		String sql = "INSERT INTO schedule (roomnum, title, deadline) VALUES (?, ?, ?)";
+		try {
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, roomnum);
+			pstmt.setString(2, title);
+			pstmt.setDate(3, java.sql.Date.valueOf(deadline)); // LocalDate -> sql Date 변환
+			pstmt.executeUpdate();
+			pstmt.close();
+		} catch (Exception e) {
+			System.out.println("일정 추가 실패 > " + e.toString());
+		}
+	}
+
+	public ArrayList<ScheduleDTO> getSchedules(int roomnum) {
+		ArrayList<ScheduleDTO> list = new ArrayList<>();
+		String sql = "SELECT * FROM schedule WHERE roomnum = " + roomnum + " ORDER BY deadline ASC";
+		try {
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				list.add(new ScheduleDTO(
+					rs.getInt("num"),
+					rs.getInt("roomnum"),
+					rs.getString("title"),
+					rs.getDate("deadline").toLocalDate()
+				));
+			}
+		} catch (Exception e) {
+			System.out.println("일정 목록 조회 실패 > " + e.toString());
+		}
+		return list;
+	}
+
+	// ==========================================
+	// 투두(Todo) 관련 DB 메소드
+	// ==========================================
+	public void addTodo(int roomnum, String content) {
+		String sql = "INSERT INTO todo (roomnum, content) VALUES (?, ?)";
+		try {
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, roomnum);
+			pstmt.setString(2, content);
+			pstmt.executeUpdate();
+			pstmt.close();
+		} catch (Exception e) {
+			System.out.println("투두 추가 실패 > " + e.toString());
+		}
+	}
+
+	public ArrayList<TodoDTO> getTodos(int roomnum) {
+		ArrayList<TodoDTO> list = new ArrayList<>();
+		String sql = "SELECT * FROM todo WHERE roomnum = " + roomnum + " ORDER BY num ASC";
+		try {
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				list.add(new TodoDTO(
+					rs.getInt("num"),
+					rs.getInt("roomnum"),
+					rs.getString("content"),
+					rs.getBoolean("completed")
+				));
+			}
+		} catch (Exception e) {
+			System.out.println("투두 목록 조회 실패 > " + e.toString());
+		}
+		return list;
+	}
+
+	public void updateTodoStatus(int num, boolean completed) {
+		String sql = "UPDATE todo SET completed = ? WHERE num = ?";
+		try {
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setBoolean(1, completed);
+			pstmt.setInt(2, num);
+			pstmt.executeUpdate();
+			pstmt.close();
+		} catch (Exception e) {
+			System.out.println("투두 상태 변경 실패 > " + e.toString());
+		}
+	}
 }
 
