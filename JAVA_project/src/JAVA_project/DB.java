@@ -9,7 +9,7 @@ public class DB {
 	Statement stmt = null;
 	String url = "jdbc:mysql://localhost:3306/usedb?serverTimezone=Asia/Seoul&useSSL=false";	//dbstudy 스키마 링크
 	String user = "root";
-	String passwd = "bkj03010301!";	//사용하시는 비밀번호로 변경
+	String passwd = "qhrxodi1021";	//사용하시는 비밀번호로 변경
 	
 	DB() {	//데이터베이스에 연결한다.
 		try {
@@ -300,5 +300,20 @@ public class DB {
 			System.out.println("투두 상태 변경 실패 > " + e.toString());
 		}
 	}
+	// 일정 추가 기능
+    public void addSchedule(int roomnum, String title, String deadline) {
+        String sql = "INSERT INTO schedule (roomnum, title, deadline) VALUES (?, ?, ?)";
+        try {
+        	
+            java.sql.PreparedStatement pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, roomnum);
+            pstmt.setString(2, title);
+            pstmt.setString(3, deadline);
+            pstmt.executeUpdate();
+            pstmt.close();
+        } catch (Exception e) {
+            System.out.println("일정 추가 실패 > " + e.toString());
+        }
+    }
 }
 
