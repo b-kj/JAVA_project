@@ -68,26 +68,26 @@ public class chatRoom extends JFrame {
         bottomPanel.add(sendBtn,BorderLayout.EAST);
 
        /* 추가: 상단 버튼 패널 (일정 / 투두) */
-        JPanel topBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton scheduleBtn = new JButton("일정 관리");
-        JButton todoBtn = new JButton("투두 리스트");
-        topBtnPanel.add(scheduleBtn);
-        topBtnPanel.add(todoBtn);
+        JPanel topBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton scheduleBtn = new JButton("일정 관리");
+        JButton todoBtn = new JButton("투두 리스트");
+        topBtnPanel.add(scheduleBtn);
+        topBtnPanel.add(todoBtn);
 
-        /* 추가: 버튼 패널과 멤버 목록을 하나로 묶음 */
-        JPanel topCombinedPanel = new JPanel(new BorderLayout());
-        topCombinedPanel.add(topBtnPanel, BorderLayout.NORTH);
-        topCombinedPanel.add(memberScroll, BorderLayout.CENTER);
+        /* 추가: 버튼 패널과 멤버 목록을 하나로 묶음 */
+        JPanel topCombinedPanel = new JPanel(new BorderLayout());
+        topCombinedPanel.add(topBtnPanel, BorderLayout.NORTH);
+        topCombinedPanel.add(memberScroll, BorderLayout.CENTER);
 
-        /* 메인 레이아웃 적용 */
-        setLayout(new BorderLayout());
-        add(chatScroll, BorderLayout.CENTER);
-        add(topCombinedPanel, BorderLayout.NORTH); 
-        add(bottomPanel, BorderLayout.SOUTH);
+        /* 메인 레이아웃 적용 */
+        setLayout(new BorderLayout());
+        add(chatScroll, BorderLayout.CENTER);
+        add(topCombinedPanel, BorderLayout.NORTH); 
+        add(bottomPanel, BorderLayout.SOUTH);
 
-        /* 일정/투두 프레임 띄우는 이벤트 연결  */
-        scheduleBtn.addActionListener(e -> new ScheduleFrame(roomnum, o.db));
-        todoBtn.addActionListener(e -> new TodoFrame(roomnum, o.db));
+        /* 일정/투두 프레임 띄우는 이벤트 연결  */
+        scheduleBtn.addActionListener(e -> new ScheduleFrame(roomnum, o.db));
+        todoBtn.addActionListener(e -> new TodoFrame(roomnum, o.db));
 
         /* 창 설정 */
         setTitle("[ " + roomnum + " ] " + roomName);
@@ -134,22 +134,22 @@ public class chatRoom extends JFrame {
 
     /* 서버 연결 */ 
     private void connectToServer() { 
-    	try { 
-    		socket = new Socket("127.0.0.1", 12345); 
-    		
-    		in = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
-    		out = new PrintWriter(socket.getOutputStream(), true); 
-    		
-    		/* 수신 스레드 시작 */
-    		new Thread(new Receiver()).start();
-    		} catch (Exception e) { 
-    			chatArea.append("서버 연결 실패: " + e.getMessage() + "\n"); 
-    			} 
-    	}
+        try { 
+            socket = new Socket("127.0.0.1", 12345); 
+            
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
+            out = new PrintWriter(socket.getOutputStream(), true); 
+            
+            /* 수신 스레드 시작 */
+            new Thread(new Receiver()).start();
+            } catch (Exception e) { 
+                chatArea.append("서버 연결 실패: " + e.getMessage() + "\n"); 
+            } 
+    }
 
     /* 메시지 전송 */
     private void sendMessage() {
-    	lastInputTime = System.currentTimeMillis();
+        lastInputTime = System.currentTimeMillis();
         String message = inputField.getText().trim();
 
         if (message.equals("")) {
@@ -180,15 +180,15 @@ public class chatRoom extends JFrame {
         long idle = System.currentTimeMillis() - lastInputTime;
 
         if(idle >= 10000 && working) { // 타이머 멈춤 확인 용 숫자(10초) 마지막에 300000(5분)으로 변경
-        		    working = false;
-        		    workBtn.setText("작업 재개");
+                    working = false;
+                    workBtn.setText("작업 재개");
 
-        		    if(out != null)
-        		    	out.println("WORK_PAUSE");
-        		    
-        		    SwingUtilities.invokeLater(() -> {
-        		        JOptionPane.showMessageDialog(chatRoom.this, "입력이 없어 타이머가 중지되었습니다.");
-        		    });
+                    if(out != null)
+                        out.println("WORK_PAUSE");
+                    
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(chatRoom.this, "입력이 없어 타이머가 중지되었습니다.");
+                    });
         }
     }
     
@@ -223,21 +223,21 @@ public class chatRoom extends JFrame {
         memberModel.clear();
 
         for (String nick : allMembers) {
-        	if (onlineUsers.contains(nick)) {
-        	    String status = userStatus.getOrDefault(nick,"REST");
-        	    long sec = userTime.getOrDefault(nick, 0L);
-        	    String time = String.format("%02d:%02d:%02d", sec / 3600, (sec % 3600) / 60, sec % 60);
-        	    String text;
+            if (onlineUsers.contains(nick)) {
+                String status = userStatus.getOrDefault(nick,"REST");
+                long sec = userTime.getOrDefault(nick, 0L);
+                String time = String.format("%02d:%02d:%02d", sec / 3600, (sec % 3600) / 60, sec % 60);
+                String text;
 
-        	    if(status.equals("WORKING")) 
-        	        text = nick + " ● 작업중 (" + time + ")";
-        	    else 
-        	        text = nick + " ● 쉬는중 (" + time + ")";
-        	    memberModel.addElement(text);
-        	}
-        	else {
-        	    memberModel.addElement(nick + " ○ 오프라인");
-        	}
+                if(status.equals("WORKING")) 
+                    text = nick + " ● 작업중 (" + time + ")";
+                else 
+                    text = nick + " ● 쉬는중 (" + time + ")";
+                memberModel.addElement(text);
+            }
+            else {
+                memberModel.addElement(nick + " ○ 오프라인");
+            }
         }
     }
 
@@ -335,7 +335,7 @@ public class chatRoom extends JFrame {
         public void actionPerformed(ActionEvent e) {
 
             if(!workStarted) {
-            	lastInputTime = System.currentTimeMillis();
+                lastInputTime = System.currentTimeMillis();
                 workStarted = true;
                 working = true;
                 workBtn.setText("일시정지");
