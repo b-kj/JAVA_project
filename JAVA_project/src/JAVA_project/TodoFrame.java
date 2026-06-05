@@ -14,7 +14,6 @@ public class TodoFrame extends JFrame {
     private JTextField contentField;
     private JProgressBar progressBar;
 
-    // 여기가 핵심입니다! 파라미터로 roomnum과 db를 모두 받습니다.
     public TodoFrame(int roomnum, DB db) {
         this.roomnum = roomnum;
         this.db = db;
