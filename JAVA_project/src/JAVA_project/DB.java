@@ -116,18 +116,15 @@ public class DB {
 	
 	void createRoom(String roomName, String loginId) {  // 방 생성
 	    try {
-	        String sql = "INSERT INTO room(name) VALUES('" + roomName + "')";
-
+	        // 6자리 무작위 방 번호 생성 (100000 ~ 999999)
+	        int randomRoomNum = (int)(Math.random() * 900000) + 100000;
+	        
+	        // DB에 방금 만든 무작위 번호로 방 추가
+	        String sql = "INSERT INTO room(roomnum, name) VALUES(" + randomRoomNum + ", '" + roomName + "')";
 	        stmt.executeUpdate(sql);
-
-	        // 마지막 생성된 roomnum 가져오기
-	        String findSql = "SELECT MAX(roomnum) AS roomnum FROM room";
-	        ResultSet rs = stmt.executeQuery(findSql);
-	        int roomnum = 0;
-
-	        if (rs.next()) {
-	            roomnum = rs.getInt("roomnum");
-	        }
+	        
+	        
+	        int roomnum = randomRoomNum;
 
 	        // 생성자를 member 테이블에 추가
 	        String memberSql = "INSERT INTO member(room, user_id) VALUES(" +  roomnum + ", '" + loginId + "')";
