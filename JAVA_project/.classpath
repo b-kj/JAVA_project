@@ -6,12 +6,18 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="lib/jna-jpms-5.18.1.jar">
+	<classpathentry kind="src" path="lib"/>
+	<classpathentry kind="lib" path="C:/Users/kyoungjin/git/JAVA_project/JAVA_project/lib/mysql-connector-j-9.7.0.jar">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/kyoungjin/git/JAVA_project/JAVA_project/lib/mysql-connector-j-9.7.0.jar">
+	<classpathentry kind="lib" path="C:/Users/kyoungjin/git/JAVA_project/JAVA_project/lib/jna-5.19.0.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/kyoungjin/git/JAVA_project/JAVA_project/lib/jna-platform-5.19.0.jar">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>

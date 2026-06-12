@@ -26,7 +26,7 @@ public class Join extends JFrame {
 	Join(Operator _o) {
 		o = _o;
 
-		setTitle("로그인");
+		setTitle("회원가입");
 		
 		/* Label 크기 작업 */
 		nkL.setPreferredSize(new Dimension(50, 30));
@@ -96,7 +96,6 @@ public class Join extends JFrame {
 					} else {
 						System.out.println("회원가입 실패");
 						JOptionPane.showMessageDialog(null, "이미 있는 아이디 입니다.");
-						nk.setText("");
 						id.setText("");
 						pw.setText("");
 					}

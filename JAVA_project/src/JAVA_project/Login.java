@@ -111,6 +111,8 @@ public class Login extends JFrame {
 				if(uid.equals("") || upass.equals("")) {
 					JOptionPane.showMessageDialog(null, "아이디와 비밀번호 모두 입력해주세요", "로그인 실패", JOptionPane.ERROR_MESSAGE);
 					System.out.println("로그인 실패 > 로그인 정보 미입력");
+					id.setText("");
+					pw.setText("");
 				}
 				
 				else if(uid != null && upass != null) {
@@ -118,12 +120,16 @@ public class Login extends JFrame {
 						o.loginId = uid;
 					    o.loginNick = o.db.getNick(uid);
 					    System.out.println("로그인 성공");
+						id.setText("");
+						pw.setText("");
 				        o.rm = new Room(o.db, o);
 						dispose();
 						o.rm.setVisible(true);
 					} else {
 						System.out.println("로그인 실패 > 로그인 정보 불일치");
 						JOptionPane.showMessageDialog(null, "로그인에 실패하였습니다");
+						id.setText("");
+						pw.setText("");
 					}
 				}
 			}

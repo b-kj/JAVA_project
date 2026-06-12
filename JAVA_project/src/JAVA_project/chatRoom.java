@@ -209,7 +209,8 @@ public class chatRoom extends JFrame {
         new javax.swing.Timer(1000, e -> checkIdle()).start();
         new javax.swing.Timer(1000, e -> refreshWorkTime()).start();
         new javax.swing.Timer(5000, e -> loadDashboardData()).start();
-    }
+        }
+        
 
     /* --- 대시보드 관련 메서드 (취소선 기능 포함) --- */
     private void updateCalendar() {
@@ -331,14 +332,13 @@ public class chatRoom extends JFrame {
     
     private void checkIdle() {
         if(!working) return;
-        long idle = System.currentTimeMillis() - lastInputTime;
-        if(idle >= 10000 && working) { 
+        long idle = inputMonitor.getIdleTime();
+        if(idle >= 10000) {
             working = false;
             workBtn.setText("작업 재개");
             if(out != null) out.println("WORK_PAUSE");
-            SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(chatRoom.this, "입력이 없어 타이머가 중지되었습니다.");
-            });
+            SwingUtilities.invokeLater(() ->
+                JOptionPane.showMessageDialog(chatRoom.this, "입력이 없어 타이머가 중지되었습니다."));
         }
     }
     

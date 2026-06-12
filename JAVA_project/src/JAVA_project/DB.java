@@ -7,9 +7,9 @@ import javax.swing.JOptionPane;
 public class DB {
 	Connection con = null;
 	Statement stmt = null;
-	String url = "jdbc:mysql://localhost:3306/usedb?serverTimezone=Asia/Seoul&useSSL=false";	//dbstudy 스키마 링크
+	String url = "jdbc:mysql://localhost:3306/usedb?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true";	//dbstudy 스키마 링크
 	String user = "root";
-	String passwd = "qhrxodi1021";	//사용하시는 비밀번호로 변경
+	String passwd = "bkj03010301!";	//사용하시는 비밀번호로 변경
 	
 	DB() {	//데이터베이스에 연결한다.
 		try {
